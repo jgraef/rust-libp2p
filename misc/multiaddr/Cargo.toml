@@ -13,7 +13,8 @@ default = ["url"]
 
 [dependencies]
 arrayref = "0.3"
-bs58 = "0.4.0"
+#bs58 = "0.4.0"
+bs58 = { git = "https://github.com/jgraef/bs58-rs", branch = "janosch/fix-const-fn" }
 byteorder = "1.3.1"
 data-encoding = "2.1"
 multihash = { version = "0.13", default-features = false, features = ["std", "multihash-impl", "identity"] }
