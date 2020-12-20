@@ -52,8 +52,8 @@ impl fmt::Display for PeerId {
 
 impl PeerId {
     /// Builds a `PeerId` from a public key.
-    pub fn from_public_key(key: PublicKey) -> PeerId {
-        let key_enc = key.into_protobuf_encoding();
+    pub fn from_public_key(key: &PublicKey) -> PeerId {
+        let key_enc = key.as_protobuf_encoding();
 
         let hash_algorithm = if key_enc.len() <= MAX_INLINE_KEY_LENGTH {
             Code::Identity
@@ -114,14 +114,15 @@ impl PeerId {
     pub fn is_public_key(&self, public_key: &PublicKey) -> Option<bool> {
         let alg = Code::try_from(self.multihash.code())
             .expect("Internal multihash is always a valid `Code`");
-        let enc = public_key.clone().into_protobuf_encoding();
+        let enc = public_key.as_protobuf_encoding();
         Some(alg.digest(&enc) == self.multihash)
     }
 }
 
+
 impl From<PublicKey> for PeerId {
     fn from(key: PublicKey) -> PeerId {
-        PeerId::from_public_key(key)
+        PeerId::from_public_key(&key)
     }
 }
 
@@ -176,6 +177,39 @@ impl FromStr for PeerId {
         PeerId::from_bytes(&bytes).map_err(|_| ParseError::MultiHash)
     }
 }
+
+
+#[cfg(feature = "serde")]
+mod serde {
+    use serde::{
+        ser::{Serialize, Serializer},
+        de::{Deserialize, Deserializer, Error},
+    };
+
+    use super::PeerId;
+
+    impl Serialize for PeerId {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+        S: Serializer
+        {
+            Serialize::serialize(&self.to_bytes(), serializer)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for PeerId {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>
+        {
+            let raw: Vec<u8> = Deserialize::deserialize(deserializer)?;
+            PeerId::from_bytes(&raw)
+                .map_err(|_| Error::custom("Invalid PeerId"))
+        }
+    }
+}
+
+
 
 #[cfg(test)]
 mod tests {

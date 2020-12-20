@@ -143,7 +143,7 @@ impl SecioConfig {
         SecioMiddleware::handshake(socket, self)
             .map_ok(|(stream_sink, pubkey, ephemeral)| {
                 let mapped = stream_sink.map_err(map_err as fn(_) -> _);
-                let peer = pubkey.clone().into_peer_id();
+                let peer = pubkey.as_peer_id();
                 let io = SecioOutput {
                     stream: RwStreamSink::new(mapped),
                     remote_key: pubkey,

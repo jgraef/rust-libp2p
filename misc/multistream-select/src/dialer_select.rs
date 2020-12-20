@@ -110,6 +110,7 @@ where
 ///
 /// This strategy may be beneficial if the dialer supports many protocols
 /// and it is unclear whether the remote supports one of the first few.
+#[allow(dead_code)]
 pub(crate) fn dialer_select_proto_parallel<R, I>(
     inner: R,
     protocols: I,

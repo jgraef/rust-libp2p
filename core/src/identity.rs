@@ -146,9 +146,14 @@ impl PublicKey {
         }
     }
 
+    #[deprecated]
+    pub fn into_protobuf_encoding(self) -> Vec<u8> {
+        self.as_protobuf_encoding()
+    }
+
     /// Encode the public key into a protobuf structure for storage or
     /// exchange with other nodes.
-    pub fn into_protobuf_encoding(self) -> Vec<u8> {
+    pub fn as_protobuf_encoding(&self) -> Vec<u8> {
         use prost::Message;
 
         let public_key = match self {
@@ -213,9 +218,71 @@ impl PublicKey {
         }
     }
 
-    /// Convert the `PublicKey` into the corresponding `PeerId`.
+    #[deprecated]
     pub fn into_peer_id(self) -> PeerId {
         self.into()
     }
+
+    /// Convert the `PublicKey` into the corresponding `PeerId`.
+    pub fn as_peer_id(&self) -> PeerId {
+        PeerId::from_public_key(self)
+    }
 }
 
+
+#[cfg(feature = "serde")]
+mod serde {
+    use serde::{
+        ser::{Serialize, Serializer, Error as SerError},
+        de::{Deserialize, Deserializer, Error as DeError},
+    };
+
+    use super::{Keypair, PublicKey};
+
+    impl Serialize for Keypair {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer
+        {
+            match self {
+                Keypair::Ed25519(keypair) => {
+                    let raw = &keypair.encode() as &[u8];
+                    Serialize::serialize(raw, serializer)
+                },
+                _ => Err(S::Error::custom("Can't serialize keypair")),
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Keypair {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>
+        {
+            let mut raw: Vec<u8> = Deserialize::deserialize(deserializer)?;
+            let keypair = crate::identity::ed25519::Keypair::decode(&mut raw)
+                .map_err(DeError::custom)?;
+            Ok(Keypair::Ed25519(keypair))
+        }
+    }
+
+    impl Serialize for PublicKey {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer
+        {
+            Serialize::serialize(&self.as_protobuf_encoding(), serializer)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for PublicKey {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>
+        {
+            let raw: &[u8] = Deserialize::deserialize(deserializer)?;
+            PublicKey::from_protobuf_encoding(raw)
+                .map_err(DeError::custom)
+        }
+    }
+}

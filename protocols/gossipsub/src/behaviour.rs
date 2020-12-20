@@ -120,7 +120,7 @@ impl From<MessageAuthenticity> for PublishConfig {
         match authenticity {
             MessageAuthenticity::Signed(keypair) => {
                 let public_key = keypair.public();
-                let key_enc = public_key.clone().into_protobuf_encoding();
+                let key_enc = public_key.as_protobuf_encoding();
                 let key = if key_enc.len() <= 42 {
                     // The public key can be inlined in [`rpc_proto::Message::from`], so we don't include it
                     // specifically in the [`rpc_proto::Message::key`] field.
@@ -132,7 +132,7 @@ impl From<MessageAuthenticity> for PublishConfig {
 
                 PublishConfig::Signing {
                     keypair,
-                    author: public_key.into_peer_id(),
+                    author: public_key.as_peer_id(),
                     inline_key: key,
                 }
             }

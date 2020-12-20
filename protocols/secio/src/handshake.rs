@@ -58,7 +58,7 @@ where
         local_nonce
     };
 
-    let local_public_key_encoded = config.key.public().into_protobuf_encoding();
+    let local_public_key_encoded = config.key.public().as_protobuf_encoding();
 
     // Send our proposition with our nonce, public key and supported protocols.
     let local_proposition = Propose {

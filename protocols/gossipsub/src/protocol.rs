@@ -171,7 +171,7 @@ impl GossipsubCodec {
         };
 
         // The key must match the peer_id
-        if source != public_key.clone().into_peer_id() {
+        if source != public_key.clone().as_peer_id() {
             warn!("Signature verification failed: Public key doesn't match source peer id");
             return false;
         }
