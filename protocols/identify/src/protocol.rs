@@ -95,6 +95,7 @@ where
 
 /// Information of a peer sent in `Identify` protocol responses.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct IdentifyInfo {
     /// The public key underlying the peer's `PeerId`.
     pub public_key: PublicKey,

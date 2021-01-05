@@ -232,6 +232,8 @@ impl PublicKey {
 
 #[cfg(feature = "serde")]
 mod serde {
+    use std::borrow::Cow;
+
     use serde::{
         ser::{Serialize, Serializer, Error as SerError},
         de::{Deserialize, Deserializer, Error as DeError},
@@ -280,8 +282,8 @@ mod serde {
             where
                 D: Deserializer<'de>
         {
-            let raw: &[u8] = Deserialize::deserialize(deserializer)?;
-            PublicKey::from_protobuf_encoding(raw)
+            let raw: Cow<'de, [u8]> = Deserialize::deserialize(deserializer)?;
+            PublicKey::from_protobuf_encoding(&raw)
                 .map_err(DeError::custom)
         }
     }
